@@ -7,40 +7,64 @@
 <link href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" rel="stylesheet" type="text/css"/>
 <link href="styles/custom.css" rel="stylesheet" type="text/css">
 <script src="http://code.jquery.com/jquery-1.8.3.min.js" type="text/javascript"></script>
+<script>
+ // taken from http://stackoverflow.com/questions/32453806/uncaught-securityerror-failed-to-execute-replacestate-on-history-cannot-be
+    $(document).bind('mobileinit',function(){
+        $.mobile.changePage.defaults.changeHash = false;
+        $.mobile.hashListeningEnabled = false;
+        $.mobile.pushStateEnabled = false;
+    });
+</script> 
 <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js" type="text/javascript"></script>
  //</script>
 <script>
- //$(document).on("pageinit", "#alphabet", initAlphabet);
  $(document).on("pagecontainershow", function () {
     var activePage = $.mobile.pageContainer.pagecontainer("getActivePage");
 
     var activePageId = activePage[0].id;
     switch (activePageId) {
         case 'alphabet':
-            changeLetter(1);
+            initLetter();
             break;
         case 'numbers':
-            changeNumber(1);
+            initNumber();
             break;
         case 'colors':
-            changeColor();
+            initColor();
+            break;
+        case 'shapes':
+            initShapes();
+            break;
+        case 'random':
+            initRandom();
+            break;
+        case 'settings':
+            initSettings();
             break;
     }
  });
 
 // Alphabet functions
-$("alphabetText").on("swipeleft",function(){
-  changeLetter(-1);
+$(document).on("pagecreate","#alphabet",function(){
+	$("#alphabetText").on("swipeleft",function(){
+	  changeLetter(-1);
+	});
 });
 
-$("alphabetText").on("swiperight",function(){
-  changeLetter(1);
+$(document).on("pagecreate","#alphabet",function(){
+	$("#alphabetText").on("swiperight",function(){
+	  changeLetter(1);
+	});
 });
+
+function initLetter() {
+	if (sessionStorage.getItem("alphabetCounter") === null) {
+      sessionStorage.setItem("alphabetCounter", "-1");
+      changeLetter(1);
+   }
+}
 
  function changeLetter(direction) {
-   if (sessionStorage.getItem("alphabetCounter") === null) {
-      sessionStorage.setItem("alphabetCounter", "-1");
-   }
    var alphabetCounter = parseInt(sessionStorage.getItem("alphabetCounter"));
    alphabetCounter = alphabetCounter + direction;
    if (alphabetCounter === 26) {
@@ -51,22 +75,37 @@ $("alphabetText").on("swiperight",function(){
    }
    var htmlCode = alphabetCounter + 65;
    $("#alphabetText").html("&#" + htmlCode);
+   if (localStorage.getItem("sound") === "on") {
+	   // Play sound taken from answer on http://stackoverflow.com/questions/8489710/play-an-audio-file-using-jquery-when-a-button-is-clicked
+	   var audioElement = document.createElement('audio');
+	   audioElement.setAttribute('src', String.fromCharCode(htmlCode) + ".mp3");
+	   audioElement.setAttribute('autoplay', 'autoplay');
+	   audioElement.play();
+   }
    sessionStorage.setItem("alphabetCounter", alphabetCounter);
 }
 
 // Number Functions
-$("numberText").on("swipeleft",function(){
-  changeNumber(-1);
+$(document).on("pagecreate","#numbers",function(){
+	$("#numberText").on("swipeleft",function(){
+	  changeNumber(-1);
+	});
 });
 
-$("numberText").on("swiperight",function(){
-  changeNumber(1);
+$(document).on("pagecreate","#numbers",function(){
+	$("#numberText").on("swiperight",function(){
+	  changeNumber(1);
+	});
 });
 
- function changeNumber(direction) {
+function initNumber() {
    if (sessionStorage.getItem("numberCounter") === null) {
       sessionStorage.setItem("numberCounter", "-1");
+	  changeNumber(1);
    }
+}
+
+ function changeNumber(direction) {
    var numberCounter = parseInt(sessionStorage.getItem("numberCounter"));
    numberCounter = numberCounter + direction;
    if (numberCounter === 21) {
@@ -87,23 +126,50 @@ $("numberText").on("swiperight",function(){
    }
    
    $("#numberText").html(htmlCode);
+   if (numberCounter <= 20) {
+      if (localStorage.getItem("sound") === "on") {
+	   // Play sound taken from answer on http://stackoverflow.com/questions/8489710/play-an-audio-file-using-jquery-when-a-button-is-clicked
+	   var audioElement = document.createElement('audio');
+	   audioElement.setAttribute('src', numberCounter + ".mp3");
+	   audioElement.setAttribute('autoplay', 'autoplay');
+	   audioElement.play();
+      }
+   }
    sessionStorage.setItem("numberCounter", numberCounter);
 }
 
 // Color Functions
-$("colorSwatch").on("swipeleft",function(){
-  changeColor();
+$(document).on("pagecreate","#colors",function(){
+	$("#colorSwatch").on("swipeleft",function(){
+	  changeColor();
+	});
 });
 
-$("colorSwatch").on("swiperight",function(){
-  changeColor();
+$(document).on("pagecreate","#colors",function(){
+	$("#colorSwatch").on("swiperight",function(){
+	  changeColor();
+	});
 });
+
+function initColor() {
+   changeColor();
+}
 
  function changeColor() {
-   
-   var randomNumber = Math.floor(Math.random()*(25-1+1)+1);
+   var color = getRandomColor("");
+   $("#colorSwatch").removeClass().addClass(color);
+   if (localStorage.getItem("sound") === "on") {
+	   // Play sound taken from answer on http://stackoverflow.com/questions/8489710/play-an-audio-file-using-jquery-when-a-button-is-clicked
+	   var audioElement = document.createElement('audio');
+	   audioElement.setAttribute('src', color + ".mp3");
+	   audioElement.setAttribute('autoplay', 'autoplay');
+	   audioElement.play();
+   }
+}
 
-    var className = "";
+function getRandomColor(suffix) {
+	var randomNumber = Math.floor(Math.random()*(25-1+1)+1);
+	var className = "";
 	switch (randomNumber) {
 		case 1:
 			className = "red";
@@ -182,9 +248,341 @@ $("colorSwatch").on("swiperight",function(){
 			break;
 	}
 
-
-   $("#colorSwatch").removeClass().addClass(className);
+    className = className + suffix;
+	return className;
 }
+
+// Shape Functions
+$(document).on("pagecreate","#shapes",function(){
+	$("#shape").on("swipeleft",function(){
+	  changeShape();
+	});
+});
+
+$(document).on("pagecreate","#shapes",function(){
+	$("#shape").on("swiperight",function(){
+	  changeShape();
+	});
+});
+
+function initShapes() {
+   changeShape();
+}
+
+ function changeShape() {
+   var shape = getRandomShape();
+    $("#shape").removeClass().addClass(shape);
+   if (localStorage.getItem("sound") === "on") {
+	   // Play sound taken from answer on http://stackoverflow.com/questions/8489710/play-an-audio-file-using-jquery-when-a-button-is-clicked
+	   var audioElement = document.createElement('audio');
+	   audioElement.setAttribute('src', shape + ".mp3");
+	   audioElement.setAttribute('autoplay', 'autoplay');
+	   audioElement.play();
+   }
+}
+
+function getRandomShape() {
+    var randomNumber = Math.floor(Math.random()*(10-1+1)+1);
+
+    var className = "";
+	switch (randomNumber) {
+		case 1:
+			className = "square";
+			break;
+		case 2:
+			className = "rectangle";
+			break;
+		case 3:
+			className = "circle";
+			break;
+		case 4:
+			className = "oval";
+			break;
+		case 5:
+			className = "triangle";
+			break;
+		case 6:
+			className = "trapezoid";
+			break;
+		case 7:
+			className = "star-five";
+			break;
+		case 8:
+			className = "octagon";
+			break;
+		case 9:
+			className = "heart";
+			break;
+		case 10:
+			className = "diamond";
+			break;
+	}
+    return className;
+}
+
+// Random Functions
+$(document).on("pagecreate","#random",function(){
+	$("#randomText").on("swipeleft",function(){
+	  changeRandom();
+	});
+});
+
+$(document).on("pagecreate","#random",function(){
+	$("#randomText").on("swiperight",function(){
+	  changeRandom();
+	});
+});
+
+function initRandom() {
+   changeRandom();
+}
+
+ function changeRandom() {
+   
+   var randomNumberSection = Math.floor(Math.random()*(3-1+1)+1);
+
+   var color = getRandomColor("-f");
+   var className = "";
+   var htmlCode = "";
+   var shape = "";
+
+   switch (randomNumberSection) {
+	case 1: 
+		htmlCode = getRandomAlphabet();
+        className = color;
+        break;
+	case 2: 
+		htmlCode = getRandomNumber();
+        className = color;
+        break;
+	case 3: 
+        shape = getRandomShape();
+        var classNameTemp = shape;
+        var colorTemp = getRandomColor("");
+        if (shape === "heart") {
+           changeCss(("." + shape + ":after"), "background:" + colorTemp);
+           changeCss(("." + shape + ":before"), "background:" + colorTemp);
+        }
+        else if (shape === "diamond") {
+           changeCss(("." + shape), "border-bottom-color:" + colorTemp);
+           changeCss(("." + shape + ":after"), "border-top-color:" + colorTemp);
+        }
+        else if (shape === "octagon") {
+           changeCss(("." + "octagon"), "background:yellow:" + colorTemp);
+           changeCss(("." + "octagon:after"), "border-top:29px solid " + colorTemp);
+           changeCss(("." + "octagon:before"), "border-bottom:29px solid " + colorTemp);
+        }
+        else if (shape === "star-five") {
+           changeCss(("." + "star-five"), "border-bottom:70px solid " + colorTemp);
+           changeCss(("." + "star-five:after"), "border-bottom:70px solid " + colorTemp);
+           changeCss(("." + "star-five:before"), "border-bottom:80px solid " + colorTemp);
+        }
+        else if (shape === "trapezoid") {
+           changeCss(("." + "trapezoid"), "border-bottom:100px solid " + colorTemp);
+        }
+        else if (shape === "triangle") {
+           changeCss(("." + "triangle"), "border-bottom:100px solid " + colorTemp);
+        }
+		else {
+           changeCss(("." + classNameTemp), "background:" + colorTemp);
+        }
+        color = colorTemp;
+		className =  shape;
+        break;
+    }
+
+   className = className + " randomText";
+   $("#randomText").html(htmlCode);
+   $("#randomText").removeClass().addClass(className);
+
+   var sound1 = "";
+   var sound2 = "";
+
+   switch (randomNumberSection) {
+	case 1: 
+      sound1 = color.substring(0, color.indexOf("-"));
+      sound2 = String.fromCharCode(htmlCode.replace("&#",""));
+      break;
+	case 2: 
+      sound1 = color.substring(0, color.indexOf("-"));
+      var numberArray = htmlCode.split("&#");
+      var numberTemp = "";
+      for (var i = 0; i < numberArray.length; i++) {
+         if (numberArray[i] != "") {
+            numberTemp = numberTemp + String.fromCharCode(numberArray[i]);
+         }
+      }
+      if (numberTemp <= 20) {
+         sound2 = numberTemp;
+      }
+      break;
+	case 3:
+      sound1 = color;
+      sound2 = shape;
+      break;
+   } 
+   if (localStorage.getItem("sound") === "on") {
+	   // Play sound taken from answer on http://stackoverflow.com/questions/8489710/play-an-audio-file-using-jquery-when-a-button-is-clicked
+	   var audioElement = document.createElement('audio');
+	   audioElement.setAttribute('src', sound1 + ".mp3");
+	   audioElement.setAttribute('autoplay', 'autoplay');
+	   audioElement.play();
+
+	   if (sound2 != "") {
+		  setTimeout(function() {
+		  var audioElement = document.createElement('audio');
+		  audioElement.setAttribute('src', sound2 + ".mp3");
+		  audioElement.setAttribute('autoplay', 'autoplay');
+		  audioElement.play();
+		  }, 1000);
+	   }
+   }
+}
+
+function getRandomAlphabet() {
+	var randomNumber = Math.floor(Math.random()*(25-1+1)+1);
+    var htmlCode = randomNumber + 65;
+    return "&#" + htmlCode;
+}
+
+function getRandomNumber() {
+	var randomNumber = Math.floor(Math.random()*(20-1+1)+1);
+    var htmlCode = randomNumber + 48;
+    htmlCode = "&#" + htmlCode;
+    if (randomNumber >= 10) {
+	   var numberCounterString = randomNumber.toString();
+	   htmlCode = "";
+	   for (var i = 0; i < numberCounterString.length; i++) {
+		  var htmlCodeTemp = parseInt(numberCounterString.charAt(i)) + 48;
+		  htmlCode = htmlCode + "&#" + htmlCodeTemp;
+	   }
+    }
+    return htmlCode;
+}
+// Taken from http://stackoverflow.com/questions/11474430/change-css-class-properties-with-jquery
+function changeCss(className, classValue) {
+    // we need invisible container to store additional css definitions
+    var cssMainContainer = $('#css-modifier-container');
+    if (cssMainContainer.length == 0) {
+        var cssMainContainer = $('<div id="css-modifier-container"></div>');
+        cssMainContainer.hide();
+        cssMainContainer.appendTo($('body'));
+    }
+
+    // and we need one div for each class
+    classContainer = cssMainContainer.find('div[data-class="' + className + '"]');
+    if (classContainer.length == 0) {
+        classContainer = $('<div data-class="' + className + '"></div>');
+        classContainer.appendTo(cssMainContainer);
+    }
+
+    // append additional style
+    classContainer.html('<style>' + className + ' {' + classValue + '}</style>');
+}
+
+
+// Settings Logic
+function initSettings() {
+   if (localStorage.getItem("sound") === null) {
+      localStorage.setItem("sound", "on");
+   }
+   if (localStorage.getItem("select-choice-month") === null) {
+      localStorage.setItem("select-choice-month", "month");
+   }
+   if (localStorage.getItem("select-choice-day") === null) {
+      localStorage.setItem("select-choice-day", "day");
+   }
+   if (localStorage.getItem("numberCount") === null) {
+      localStorage.setItem("numberCount", "20");
+   }
+
+   $("#sound").val(localStorage.getItem("sound"));
+   $("#sound").slider("refresh");
+   $("#select-choice-day").val(localStorage.getItem("select-choice-day"));
+   
+   //$("#select-choice-day").controlgroup().controlgroup("option", "select-choice-day", localStorage.getItem("select-choice-day"));
+   //("#select-choice-day").controlgroup().controlgroup("refresh");
+   $("#numberCount").val(localStorage.getItem("numberCount"));
+
+   var today = new Date();
+   var dd = today.getDate();
+   var mm = today.getMonth() + 1;
+
+   var monthName = "";
+   switch (mm) {
+      case 1:
+         monthName = "january";
+         break;
+      case 2:
+         monthName = "february";
+         break;
+      case 3:
+         monthName = "march";
+         break;
+      case 4:
+         monthName = "april";
+         break;
+      case 5:
+         monthName = "may";
+         break;
+      case 6:
+         monthName = "june";
+         break;
+      case 7:
+         monthName = "july";
+         break;
+      case 8:
+         monthName = "august";
+         break;
+      case 9:
+         monthName = "september";
+         break;
+      case 10:
+         monthName = "october";
+         break;
+      case 11:
+         monthName = "november";
+         break;
+      case 12:
+         monthName = "december";
+         break;
+   }
+
+   if (dd === localStorage.getItem("select-choice-day") &&
+       monthName === localStorage.getItem("select-choice-month")) {
+       var videoElement = document.createElement('video');
+	   videoElement.setAttribute('src', "birthday" + ".mp4");
+	   videoElement.setAttribute('type', "video/mp4");
+	   videoElement.setAttribute('width', "320");
+	   videoElement.setAttribute('height', "240");
+	   videoElement.setAttribute('controls', "controls");
+	   $("#settings").append(videoElement);
+   }
+}
+$(document).on('pageinit', '#settings', function(){
+ $("#sound").on("slidestop", function(event, ui) {
+   var newValue = $("#sound").val();
+   localStorage.setItem("sound", newValue);
+ });
+});
+$(document).on('pageinit', '#settings', function(){
+ $("#select-choice-month").change(function() {
+   var newValue = $("#select-choice-month").val();
+   localStorage.setItem("select-choice-month", newValue);
+ });
+});
+$(document).on('pageinit', '#settings', function(){
+ $("#select-choice-day").change(function() {
+   var newValue = $("#select-choice-day").val();
+   localStorage.setItem("select-choice-day", newValue);
+ });
+});
+$(document).on('pageinit', '#settings', function(){
+ $("#numberCount").change(function() {
+   var newValue = $("#numberCount").val();
+   localStorage.setItem("numberCount", newValue);
+ });
+});
 </script>
 </head> 
 <body> 
@@ -294,7 +692,17 @@ $("colorSwatch").on("swiperight",function(){
 	</div>
   <div data-role="content">	
 	  <div>
-		<div class="circle"></div>
+		<div class="ui-grid-b">
+		<div class="ui-block-a">
+			<a href="#" data-role="button" data-icon="arrow-l" data-iconpos="notext" onclick="changeShape(); return false"></a>
+		</div>
+		<div class="ui-block-b">
+			<div id="shape"></div>
+		</div>
+		<div class="ui-block-c">
+			<a href="#" data-role="button" data-icon="arrow-r" data-iconpos="notext" onclick="changeShape(); return false"></a>
+		</div>
+	  </div>
 	  </div>
 	</div>
 	<div data-role="footer" data-theme="b">
@@ -309,7 +717,17 @@ $("colorSwatch").on("swiperight",function(){
 	</div>
   <div data-role="content">	
 	  <div>
-		<h1>A</h1>
+		<div class="ui-grid-b">
+		<div class="ui-block-a">
+			<a href="#" data-role="button" data-icon="arrow-l" data-iconpos="notext" onclick="changeRandom(); return false"></a>
+		</div>
+		<div class="ui-block-b">
+			<div id="randomText"></div>
+		</div>
+		<div class="ui-block-c">
+			<a href="#" data-role="button" data-icon="arrow-r" data-iconpos="notext" onclick="changeRandom(); return false"></a>
+		</div>
+	  </div>
 	  </div>
 	</div>
 	<div data-role="footer" data-theme="b">
@@ -325,13 +743,8 @@ $("colorSwatch").on("swiperight",function(){
   <div data-role="content">	 
 	<form action="settings.html" method="post"> 
 		<div data-role="fieldcontain">
-			<fieldset data-role="controlgroup"  data-type="horizontal">
-				<legend>Choose a gender:</legend>
-				<input type="radio" name="gender" id="female" value="female" />
-				<label for="female">Female</label>
-
-				<input type="radio" name="gender" id="male" value="male"  />
-				<label for="male">Male</label>
+			<label for="numberCount">Max Number Count (Voiceover to 20):</label>
+            <input type="text" name="numberCount" id="numberCount" value=""  />
 		</div>
 		<div data-role="fieldcontain">
 			<fieldset data-role="controlgroup" data-type="horizontal">
@@ -339,7 +752,7 @@ $("colorSwatch").on("swiperight",function(){
 			
 				<label for="select-choice-month">Month</label>
 				<select name="select-choice-month" id="select-choice-month">
-					<option>Month</option>
+					<option value="month">Month</option>
 					<option value="january">January</option>
 					<option value="february">February</option>
 					<option value="march">March</option>
@@ -356,7 +769,7 @@ $("colorSwatch").on("swiperight",function(){
 			
 				<label for="select-choice-day">Day</label>
 				<select name="select-choice-day" id="select-choice-day">
-					<option>Day</option>
+					<option value="day">Day</option>
 					<option value="1">1</option>
 					<option value="2">2</option>
 					<option value="3">3</option>
@@ -388,38 +801,12 @@ $("colorSwatch").on("swiperight",function(){
 					<option value="29">29</option>
 					<option value="30">30</option>
 					<option value="31">31</option>
-					<!-- etc. -->
 				</select>
-			
-				<label for="select-choice-year">Year</label>
-				<select name="select-choice-year" id="select-choice-year">
-					<option>Year</option>
-					<option value="2011">2006</option>
-					<option value="2011">2007</option>
-					<option value="2011">2008</option>
-					<option value="2011">2009</option>
-					<option value="2011">2010</option>
-					<option value="2011">2011</option>
-					<option value="2011">2012</option>
-					<option value="2011">2013</option>
-					<option value="2011">2014</option>
-					<option value="2011">2015</option>
-					<option value="2011">2016</option>
-					<!-- etc. -->
-				</select>
-				
 			</fieldset>
 		</div>
 		<div data-role="fieldcontain">
 			<label for="sound">Sound:</label>
 			<select name="sound" id="sound" data-role="slider">
-				<option value="on">On</option>
-				<option value="off">Off</option>
-			</select> 
-		</div>
-		<div class="ui-field-contain">
-			<label for="back">Back Button:</label>
-			<select name="back" id="back" data-role="slider">
 				<option value="on">On</option>
 				<option value="off">Off</option>
 			</select> 
